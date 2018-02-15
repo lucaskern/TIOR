@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+        }    
+        
+        .slidecontainer {
+            width: 100%;
+        }
+
+        .slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 25px;
+            background: #d3d3d3;
+            outline: none;
+            opacity: 0.7;
+            -webkit-transition: .2s;
+            transition: opacity .2s;
+        }
+
+        .slider:hover {
+            opacity: 1;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            background: #4CAF50;
+            cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 25px;
+            height: 25px;
+            background: #4CAF50;
+            cursor: pointer;
+        }
+
+        .color-box {
+            width: 100%;
+            height: 100px;
+            border: 1px solid black;
+            margin: 5px 5px 5px 0px;
+            background-color: white;
+        }
+
+    </style>
+
+    <script src="http://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <h1> The Internets Own Rainbow </h1>
+
+    <div class="color-block">
+        <h2> Red </h2>
+        <div class="color-box">
+        </div>
+        <input type="range" min="0" max="25" value="13" class="slider red hue">
+        <input type="range" min="40" max="100" value="70" class="slider red saturation">
+        <input type="range" min="20" max="80" value="60" class="slider red lightness">
+    </div>
+    
+<!--    <div class="color-block">
+        <h2> orange </h2>
+        <div class="orange color-box">
+        </div>
+        <input type="range" min="0" max="25" value="13" class="slider orange hue">
+        <input type="range" min="40" max="100" value="70" class="slider orange saturation">
+        <input type="range" min="20" max="80" value="60" class="slider orange lightness">
+    </div>
+    
+    <div class="color-block">
+        <h2> green </h2>
+        <div class="green color-box">
+        </div>
+        <input type="range" min="0" max="25" value="13" class="slider green hue">
+        <input type="range" min="40" max="100" value="70" class="slider green saturation">
+        <input type="range" min="20" max="80" value="60" class="slider green lightness">
+    </div>
+    
+    <div class="color-block">
+        <h2> blue </h2>
+        <div class="blue color-box">
+        </div>
+        <input type="range" min="0" max="25" value="13" class="slider blue hue">
+        <input type="range" min="40" max="100" value="70" class="slider blue saturation">
+        <input type="range" min="20" max="80" value="60" class="slider blue lightness">
+    </div>-->
+    
+    <button>
+        Submit Colors
+    </button>
+
+    <script>
+        let rH = 0;
+        let rS = 0;
+        let rL = 0;
+        
+        $(".color-box").click(function() {
+            console.log("test");
+        });
+
+        $(".hue").change(function() {
+            console.log(this.className);
+            if (this.className.includes("red")) {
+                rH = this.value;
+                updateColors("red");
+            } else if (this.className.includes("orange")) {
+                updateColors("orange");
+            } else if (this.className.includes("green")) {
+                updateColors("green");
+            } else if (this.className.includes("blue")) {
+                updateColors("blue");
+            } 
+            
+        });
+        
+        $(".saturation").change(function() {
+            console.log(this.className);
+            if (this.className.includes("red")) {
+                rS = this.value;
+                updateColors("red");
+            } else if (this.className.includes("orange")) {
+                updateColors("orange");
+            } else if (this.className.includes("green")) {
+                updateColors("green");
+            } else if (this.className.includes("blue")) {
+                updateColors("blue");
+            } 
+            
+        });
+        
+        $(".lightness").change(function() {
+            console.log(this.className);
+            if (this.className.includes("red")) {
+                rL = this.value;
+                updateColors("red");
+            } else if (this.className.includes("orange")) {
+                updateColors("orange");
+            } else if (this.className.includes("green")) {
+                updateColors("green");
+            } else if (this.className.includes("blue")) {
+                updateColors("blue");
+            } 
+            
+        });
+        
+        let updateColors = function(color) {
+            console.log(color + " ran");
+            switch (color) {
+                case "red":
+                    $(".color-box").css({"background-color": "hsl(" + rH + "," + rS + "%," + rL + "%)"});
+                    break;
+                case "orange":
+                    $(".red color-box").css({"background-color": "hsl(" + rH + "," + rS + "%," + rL + "%)"});
+                    break;
+                case "green":
+                    $(".red color-box").css({"background-color": "hsl(" + rH + "," + rS + "%," + rL + "%)"});
+                    break;
+                case "blue":
+                    $(".red color-box").css({"background-color": "hsl(" + rH + "," + rS + "%," + rL + "%)"});
+                    break;
+            }
+            
+            //$("color-box").css({"background-color": "red"});
+           // $("." + color + " color-box").css({"background-color": "hsl(" + hue + ",100%, 50%)"});
+            console.log(rH + ',' + rS + ',' + rL);
+        }
+
+    </script>
+</body>
+
+</html>
