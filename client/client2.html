@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Our simple HTTP server</title>
+  <link rel="stylesheet" type="text/css" href="/style.css">
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
+  <script type="text/babel">
+ const handleResponse = (xhr, parseResponse) => {
+      const content = document.querySelector('#content');
+      switch(xhr.status) {
+        case 200: //if success
+          content.innerHTML = `<b>Success</b>`;
+          break;
+        case 201: //if created
+          content.innerHTML = `<b>Create</b>`;
+          break;
+        case 400: //if bad request
+          content.innerHTML = `<b>Bad Request</b>`;
+          break;
+        case 404: //if not found
+          content.innerHTML = `<b>Resource Not Found</b>`;
+          break;
+        default: //any other status
+          content.innerHTML = `Error code not implemented by client.`;
+          break;
+      }
+      
+      //if we are expecting a response body (not in a head request)
+      if(parseResponse) {
+        //parse the object and print it
+        const obj = JSON.parse(xhr.responseText);
+        const objStr = JSON.stringify(obj)
+        console.dir(obj);
+          content.innerHTML += "</br>" + objStr;
+      } else {
+        console.log('received');
+      }
+    };
+    const requestNewUser = (e, form) => {
+        //console.log("add new user using: " + form);
+        
+        const url = "/addUsers";
+        const method = "POST";
+        const age = form.querySelector("#ageField").value;
+        const name = form.querySelector("#nameField").value;
+        
+        //create a new AJAX request (asynchronous)
+      const xhr = new XMLHttpRequest();
+      //setup connect using the selected method and url
+      xhr.open(method, url);
+        
+      //set accept header in request to application/json
+      //The accept header is a comma separated list of
+      //accepted response types in order of preference
+      //from first to last. You only need to send one
+      //but you can send many, separated by commas.
+      xhr.setRequestHeader("Content-Type", "application/json");
+        
+      xhr.onload = () => handleResponse(xhr, true); 
+      
+      xhr.send(JSON.stringify({age: age, name: name}));
+      
+      console.dir(xhr);
+
+      //cancel browser's default action
+      e.preventDefault();
+      //return false to prevent page redirection from a form
+      return false;
+    };
+
+    //function to send request
+    const requestUpdate = (e, form) => {
+        
+        //grab url field 
+        const url = userForm.querySelector('#urlField').value;
+        //grab method selected
+        const method = userForm.querySelector('#methodSelect').value;
+        console.log(method);
+
+      
+      //create a new AJAX request (asynchronous)
+      const xhr = new XMLHttpRequest();
+      //setup connect using the selected method and url
+      xhr.open(method, url);
+        
+      //set accept header in request to application/json
+      //The accept header is a comma separated list of
+      //accepted response types in order of preference
+      //from first to last. You only need to send one
+      //but you can send many, separated by commas.
+      xhr.setRequestHeader('Accept', 'application/json');
+        
+      //if get request or head request
+      if(method == 'get') {
+        //set onload to parse request and get json message
+        xhr.onload = () => handleResponse(xhr, true); 
+      } else {
+        //set onload to check meta data and NOT message
+        //There are no body responses in a head request
+        xhr.onload = () => handleResponse(xhr, false);
+      }
+      
+      //send ajax request
+      xhr.send();
+
+      //cancel browser's default action
+      e.preventDefault();
+      //return false to prevent page redirection from a form
+      return false;
+    };
+    const init = () => {
+      //grab form
+      const userForm = document.querySelector('#userForm');
+      
+      //function to handle our request
+      const getUsers = (e) => requestUpdate(e, userForm);
+      
+      //add event listener
+      userForm.addEventListener('submit', getUsers);
+        
+    
+        const nameForm = document.querySelector("#nameForm");
+        const addUser = (e) => requestNewUser(e, nameForm);
+        nameForm.addEventListener('submit', addUser);
+    };
+    window.onload = init;
+  </script>
+</head>
+<body>
+  <section id="top">
+    <h3>POST Status Code Tests</h3>
+    <form id="nameForm" action="/addUser" method="post">
+      <label for="name">Name: </label>
+      <input id="nameField" type="text" name="name" />
+      <label for="age">Age: </label>
+      <input id="ageField" type="number" name="age" min="0" max="100" step="1"/>
+      <input type="submit" value="Add User" />
+    </form>
+    <form id="userForm" action="/getUsers" method="get">
+      <select id='urlField'>
+        <option value='/getUsers'>/getUsers</option>
+        <option value='/notReal'>/notReal</option>
+      </select>
+      <select id="methodSelect">
+        <option value="get">GET</option>
+        <option value="head">HEAD</option>
+      </select>
+      <input type="submit" value="Get User" />
+    </form>
+  </section>
+  <section id="content">
+  </section>
+</body>
+</html>
