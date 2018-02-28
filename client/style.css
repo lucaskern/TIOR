@@ -65,7 +65,8 @@ footer p {
     margin: 0 auto;
     text-align: center;
     position: fixed;
-    bottom: 10px;
+    bottom: 5px;
+    padding: 0px;
     left: 45%;
 }
 
@@ -106,6 +107,7 @@ img {
 
 #violet {
     border: 2px solid violet;
+    margin-bottom: 100px;
 }
 
 .rainbow {
