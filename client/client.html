@@ -16,23 +16,23 @@
                 content.innerHTML = "<p>Success</p>";
                 break;
             case 201: //created
-                content.innerHTML = '<p>Create</p>';
+                content.innerHTML = '<p>Created Image</p>';
                 break;
             case 204: //updated an image
-                content.innerHTML = '<p>Updated (No Content)</p>';
+                content.innerHTML = '<p>Updated</p>';
                 break;
             case 400: //bad request
                 content.innerHTML = "<p>Bad Request</p>";
                 break;
             case 404: //not found
-                content.innerHTML = "<p>Resource Not Found</p>";
+                content.innerHTML = "<p>Request Not Found</p>";
                 break;
-            default: //catchall
+            default:
                 content.innerHTML = "<p>Error code not implemented by client.</p>";
                 break;
         }
 
-        //expecting a body
+        //if theres a body
         if (parseMe) {
             //console.log(xhr.response);
             
@@ -101,11 +101,11 @@
 
         xhr.onload = () => handleResponse(xhr, true);
 
-        //build data
-        const formData = `title=${imgTitleField.value}&url=${imgUrlField.value}&color=${colorVal}`;
+        //build json
+        const imgData = `title=${imgTitleField.value}&url=${imgUrlField.value}&color=${colorVal}`;
 
         //send request with data
-        xhr.send(formData);
+        xhr.send(imgData);
 
         //prevent browser default
         e.preventDefault();
