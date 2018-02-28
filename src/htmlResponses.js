@@ -1,28 +1,23 @@
-const fs = require('fs'); // pull in the file system module
+const fs = require('fs'); // pull in file module
 
-// load files into memory
-// This is a synchronous operation, so you'd only
-// want to do it on startup.
-// This not the best way to load files unless you have few files.
+//point to files
 const index = fs.readFileSync(`${__dirname}/../client/client.html`);
-const css = fs.readFileSync(`${__dirname}/../client/style.css`);
+const style = fs.readFileSync(`${__dirname}/../client/style.css`);
 
-// function to get the index page
+//get main file
 const getIndex = (request, response) => {
   response.writeHead(200, { 'Content-Type': 'text/html' });
   response.write(index);
   response.end();
 };
 
-// function to get css page
-const getCSS = (request, response) => {
+//get stylesheet
+const getStyle = (request, response) => {
   response.writeHead(200, { 'Content-Type': 'text/css' });
-  response.write(css);
+  response.write(style);
   response.end();
 };
 
-// set out public exports
-module.exports = {
-  getIndex,
-  getCSS,
-};
+//export functions
+module.exports.getIndex = getIndex;
+module.exports.getStyle = getStyle;

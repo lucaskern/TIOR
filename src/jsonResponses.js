@@ -1,137 +1,82 @@
+//hard coded JSON
+const imgs = {};
 
-
-// Note this object is purely in memory
-// When node shuts down this will be cleared.
-// Same when your heroku app shuts down from inactivity
-// We will be working with databases in the next few weeks.
-const users = {};
-
-// function to respond with a json object
-// takes request, response, status code and object to send
+// json response function
 const respondJSON = (request, response, status, object) => {
-    // object for our headers
-    // Content-Type for json
-    const headers = {
-        'Content-Type': 'application/json',
-    };
+  response.writeHead(status, { 'Content-Type': 'application/json' });
 
-    // send response with json object
-    response.writeHead(status, headers);
-    response.write(JSON.stringify(object));
-    response.end();
-
-    //console.dir(response);
+  response.write(JSON.stringify(object));
+  response.end();
 };
 
-// function to respond without json body
-// takes request, response and status code
-const respondJSONMeta = (request, response, status) => {
-    // object for our headers
-    // Content-Type for json
-    const headers = {
-        'Content-Type': 'application/json',
-    };
+const respondJSONHead = (request, response, status) => {
+  response.writeHead(status, { 'Content-Type': 'application/json' });
 
-    // send response without json object, just headers
-    response.writeHead(status, headers);
-    response.end();
+  response.end();
 };
 
-// get user object
-// should calculate a 200
-const getUsers = (request, response) => {
-    // json object to send
+const getImgs = (request, response) => {
+  const responseJSON = {
+    imgs,
+  };
+
+  return respondJSON(request, response, 200, responseJSON);
+};
+
+const handleImg = (request, response, body) => {
+  const responseJSON = {
+    message: 'Url, title, and color are all required.',
+  };
     
-    console.dir(users);
-    const responseJSON = {
-        users,
-    };
+ //console.dir(body);
 
-    // return 200 with message
-    return respondJSON(request, response, 200, responseJSON);
+  if (!body.title || !body.url || !body.color) {
+    responseJSON.id = 'missingParams';
+    return respondJSON(request, response, 400, responseJSON);
+  }
+
+  // default code for successful creation
+  let responseCode = 201;
+
+  // if the image already exists switch to 204
+  if (imgs[body.title]) {
+    responseCode = 204;
+  } else {
+    imgs[body.title] = {};
+  }
+
+  // add or update fields
+  imgs[body.title].title = body.title;
+  imgs[body.title].url = body.url;
+  imgs[body.title].color = body.color;
+
+  // if created, send message
+  if (responseCode === 201) {
+    responseJSON.message = 'Created Successfully';
+    //console.log(responseJSON.message);
+    return respondJSON(request, response, responseCode, responseJSON);
+  }
+  // 204 does not have an object to deliver
+  return respondJSONHead(request, response, responseCode);
 };
 
-// get meta info about user object
-// should calculate a 200
-const getUsersMeta = (request, response) =>
-    // return 200 without message, just the meta data
-    respondJSONMeta(request, response, 200);
-
-// function just to update our object
-const updateUser = (request, response) => {
-    let body = [];
-    request.on('data', (chunk) => {
-        body.push(chunk);
-    }).on('end', () => {
-        body = Buffer.concat(body).toString();
-        // at this point, `body` has the entire request body stored in it as a string
-        console.dir(body);
-
-//        // change to make to user
-//        const newUser = {
-//            age: body.age,
-//            name: body.name,
-//        };
-        
-        const newUser = {
-            createdAt: Date.now(),
-            age: body.age,
-            name: body.name,
-          };
-
-        // modifying our dummy object
-        // just indexing by time for now
-        //users[newUser.name] = newUser;
-            
-        users[newUser.createdAt] = newUser;
-
-        // console.dir(request.body);
-
-        // return a 201 created status
-        return respondJSON(request, response, 201, newUser);
-    });
-
-};
-
-////function just to update our object 
-//const updateUser = (request, response) => {
-//  //change to make to user
-//  //This is just a dummy object for example
-//  const newUser = {
-//    createdAt: Date.now(),
-//  };
-//
-//  // modifying our dummy object
-//  // just indexing by time for now
-//  users[newUser.createdAt] = newUser;
-//
-//  //return a 201 created status
-//  return respondJSON(request, response, 201, newUser);
-//};
-
-// function for 404 not found requests with message
 const notFound = (request, response) => {
-    // create error message for response
-    const responseJSON = {
-        message: 'The page you are looking for was not found.',
-        id: 'notFound',
-    };
+  const responseJSON = {
+    message: '404: ' + request.url + " was not found",
+    id: 'noSuchPage',
+  };
 
-    // return a 404 with an error message
-    respondJSON(request, response, 404, responseJSON);
+  return respondJSON(request, response, 404, responseJSON);
 };
 
-// function for 404 not found without message
-const notFoundMeta = (request, response) => {
-    // return a 404 without an error message
-    respondJSONMeta(request, response, 404);
-};
+const notFoundHead = (request, response) => respondJSONHead(request, response, 404);
 
-// set public modules
+// exports
 module.exports = {
-    getUsers,
-    getUsersMeta,
-    updateUser,
-    notFound,
-    notFoundMeta,
+  respondJSON,
+  respondJSONHead,
+  getImgs,
+  handleImg,
+  notFound,
+  notFoundHead,
 };

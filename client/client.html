@@ -1,258 +1,218 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
-
-    <style>
-        body {
-            font-family: 'Roboto', sans-serif;
+  <title>The Internet's Own Rainbow</title>
+        <link href="https://fonts.googleapis.com/css?family=Oswald:400,500,700" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="./style.css">
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
+  <script type="text/babel">
+  
+    //handle response from server
+    const handleResponse = (xhr, parseMe) => {
+        const content = document.querySelector('#content');
+        switch (xhr.status) {
+            case 200: //success
+                content.innerHTML = "<p>Success</p>";
+                break;
+            case 201: //created
+                content.innerHTML = '<p>Create</p>';
+                break;
+            case 204: //updated an image
+                content.innerHTML = '<p>Updated (No Content)</p>';
+                break;
+            case 400: //bad request
+                content.innerHTML = "<p>Bad Request</p>";
+                break;
+            case 404: //not found
+                content.innerHTML = "<p>Resource Not Found</p>";
+                break;
+            default: //catchall
+                content.innerHTML = "<p>Error code not implemented by client.</p>";
+                break;
         }
 
-        .slidecontainer {
-            width: 100%;
+        //expecting a body
+        if (parseMe) {
+            //console.log(xhr.response);
+            
+            //get var with all images
+            const obj = JSON.parse(xhr.response);
+            const imageObj = obj.imgs;
+
+            if (obj.message) {
+                const p = document.createElement('p');
+                p.textContent = `Message: ${obj.message}`;
+                content.appendChild(p);
+            }
+
+            //loop through each image and send it to append func
+            for (var key in imageObj) {
+                if (imageObj.hasOwnProperty(key)) {
+                    console.log(imageObj[key].title);
+                    appendImage(imageObj[key]);
+                }
+            }
+        } else {
+            console.log('received');
+        }
+    };
+
+    //add image to page
+    let appendImage = function(image) {
+
+        //check if image exists already
+        let strNoSpace = image.title.replace(/\s/g, '');
+        let doesExist = document.getElementById(strNoSpace);
+        //only add image if title is new
+        if (doesExist) {
+            //do nothing
+        } else {
+            let div = document.querySelector("#" + image.color);
+
+            var elem = document.createElement("img");
+            elem.setAttribute("src", image.url);
+            elem.setAttribute("alt", image.title);
+            elem.setAttribute("id", strNoSpace);
+
+            div.appendChild(elem);
         }
 
-        .slider {
-            -webkit-appearance: none;
-            width: 100%;
-            height: 25px;
-            background: #d3d3d3;
-            outline: none;
-            opacity: 0.7;
-            -webkit-transition: .2s;
-            transition: opacity .2s;
+    }
+
+    //function to send post
+    const sendImg = (e, imgForm) => {
+        //get action and method
+        const imgAction = imgForm.getAttribute('action');
+        const imgMethod = imgForm.getAttribute('method');
+
+        //get the fields
+        const imgTitleField = imgForm.querySelector('#imgTitleField');
+        const imgUrlField = imgForm.querySelector('#imgUrlField');
+        const colorField = imgForm.querySelector('#colorField');
+        const colorVal = colorField.options[colorField.selectedIndex].value;
+
+        //AJAX request
+        const xhr = new XMLHttpRequest();
+        xhr.open(imgMethod, imgAction);
+
+        xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+        xhr.setRequestHeader('Accept', 'application/json');
+
+        xhr.onload = () => handleResponse(xhr, true);
+
+        //build data
+        const formData = `title=${imgTitleField.value}&url=${imgUrlField.value}&color=${colorVal}`;
+
+        //send request with data
+        xhr.send(formData);
+
+        //prevent browser default
+        e.preventDefault();
+        return false;
+    };
+
+    //function to update page with images
+    const updateData = (e, form) => {
+
+        const url = "/getImgs";
+        const method = "get";
+
+        //create a new AJAX request (asynchronous)
+        const xhr = new XMLHttpRequest();
+        xhr.open(method, url);
+        xhr.setRequestHeader('Accept', 'application/json');
+
+        //what is the method?
+        if (method == 'get') {
+            xhr.onload = () => handleResponse(xhr, true);
+        } else {
+            xhr.onload = () => handleResponse(xhr, false);
         }
 
-        .slider:hover {
-            opacity: 1;
-        }
+        console.dir(xhr);
 
-        .slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 25px;
-            height: 25px;
-            background: #4CAF50;
-            cursor: pointer;
-        }
+        //send request
+        xhr.send();
 
-        .slider::-moz-range-thumb {
-            width: 25px;
-            height: 25px;
-            background: #4CAF50;
-            cursor: pointer;
-        }
+        //stop browser redirect
+        e.preventDefault();
+        return false;
+    };
 
-        .color-box {
-            width: 100px;
-            height: 100px;
-            border: 1px solid black;
-            margin: 5px 5px 5px 0px;
-            background-color: white;
-            float: left;
-        }
+    const init = () => {
+        const imgForm = document.querySelector('#imgForm');
+        const imgGetForm = document.querySelector('#imgGetForm');
 
-    </style>
+        //handle request
+        const getImgs = (e) => updateData(e, imgGetForm);
+        const addImg = (e) => sendImg(e, imgForm);
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+        //attach event listeners for adding and updating images
+        imgGetForm.addEventListener('submit', getImgs);
+        imgForm.addEventListener('submit', addImg);
+
+    };
+    window.onload = init;
+  </script>
 </head>
-
 <body>
-    <h1> The Internets Own Rainbow </h1>
-
-    <h4> Set the Sliders to make the color that to you MOST represents Red, Orange, Green, and Blue. Hit submit when done to see overall results. </h4>
-
-    <div id="red" class="color-box">
-
-    </div>
-    <div id="orange" class="color-box">
-
-    </div>
-    <div id="green" class="color-box">
-
-    </div>
-    <div id="blue" class="color-box">
-
-    </div>
-
-    </br>
-
-    <form action="" id="select-color">
-        <input type="radio" name="color" value="red" checked/> Red <br>
-        <input type="radio" name="color" value="orange" /> Orange <br>
-        <input type="radio" name="color" value="green" /> Green <br>
-        <input type="radio" name="color" value="blue" /> Blue <br>
+  <section id="top">
+    <h1>The Internet's Own <span class="rainbow">Rainbow</span></h1>
+      <p>
+        upload an image that for you, strongly represents one of the 8 colors of the rainbow. <br/> Over time watch how the mosaic of color grows.
+      </p>
+      
+      <p>Inspo: <a href="https://imgur.com/a/OM3qg/layout/grid"> here</a></p>
+      
+      <form id="imgForm" action="/addImg" method="post">
+          <label for="name">Title: </label>
+            <input id="imgTitleField" value="starry night" type="text" name="imgTitle" />      
+          <label for="url">Url: </label>
+              <input id="imgUrlField" value="https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Starry_Night_Over_the_Rhone.jpg/348px-Starry_Night_Over_the_Rhone.jpg" type="text" name="imgUrl" />
+          <label for="color">Color: </label>
+          <select id="colorField" name='color' >
+            <option title='red' value='red'>red</option>
+            <option title='orange' value='orange'>orange</option>
+            <option title='yellow' value='yellow'>yellow</option>
+            <option title='green' value='green'>green</option>
+            <option title='blue' value='blue'>blue</option>
+            <option title='indigo' value='indigo'>indigo</option>
+            <option title='violet' value='violet'>violet</option>
+          </select>
+              <br/>
+          <input type="submit" value="Add Image" />
     </form>
-
-    <div class="color-block">
-        <input type="range" min="0" max="360" value="0" class="slider hue">
-        <input type="range" min="0" max="100" value="50" class="slider saturation">
-        <input type="range" min="0" max="100" value="50" class="slider lightness">
+      <form id="imgGetForm" action="/getImgs" method="get">
+        <input type="submit" value="Refresh Images" />
+      </form>
+  </section>
+  <section id="content">
+  </section>
+    <div id="red" class="color-container">
+    
     </div>
-
-    <!--
-    <div class="color-block">
-        <h2> orange </h2>
-        <div class="color-box">
-        </div>
-        <input type="range" min="0" max="25" value="13" class="slider orange hue">
-        <input type="range" min="40" max="100" value="70" class="slider orange saturation">
-        <input type="range" min="20" max="80" value="60" class="slider orange lightness">
+    <div id="orange" class="color-container">
+    
     </div>
-
-    <div class="color-block">
-        <h2> green </h2>
-        <div class="color-box">
-        </div>
-        <input type="range" min="0" max="25" value="13" class="slider green hue">
-        <input type="range" min="40" max="100" value="70" class="slider green saturation">
-        <input type="range" min="20" max="80" value="60" class="slider green lightness">
+    <div id="yellow" class="color-container">
+    
     </div>
-
-    <div class="color-block">
-        <h2> blue </h2>
-        <div class="color-box">
-        </div>
-        <input type="range" min="0" max="25" value="13" class="slider blue hue">
-        <input type="range" min="40" max="100" value="70" class="slider blue saturation">
-        <input type="range" min="20" max="80" value="60" class="slider blue lightness">
+    <div id="green" class="color-container">
+    
     </div>
--->
-
-    <button>
-        Submit Colors
-    </button>
-
-    <script>
-        let rH = 0;
-        let rS = 0;
-        let rL = 0;
-
-        let oH = 0;
-        let oS = 0;
-        let oL = 0;
-
-        let gH = 0;
-        let gS = 0;
-        let gL = 0;
-
-        let bH = 0;
-        let bS = 0;
-        let bL = 0;
-
-        $(".color-box").click(function() {
-            console.log("test");
-        });
-
-        $(".hue").change(function() {
-            //console.log(this.className);
-
-            let color = $('input[name="color"]:checked').val();
-            console.log(color);
-
-            switch (color) {
-                case "red":
-                    rH = this.value;
-                    updateColors(color);
-                    break;
-                case "orange":
-                    oH = this.value;
-                    updateColors(color);
-                    break;
-                case "green":
-                    gH = this.value;
-                    updateColors(color);
-                    break;
-                case "blue":
-                    bH = this.value;
-                    updateColors(color);
-                    break;
-            }
-
-        });
-
-        $(".saturation").change(function() {
-
-            let color = $('input[name="color"]:checked').val();
-            console.log(color);
-
-            switch (color) {
-                case "red":
-                    rS = this.value;
-                    updateColors(color);
-                    break;
-                case "orange":
-                    oS = this.value;
-                    updateColors(color);
-                    break;
-                case "green":
-                    gS = this.value;
-                    updateColors(color);
-                    break;
-                case "blue":
-                    bS = this.value;
-                    updateColors(color);
-                    break;
-            }
-        });
-
-        $(".lightness").change(function() {
-
-            let color = $('input[name="color"]:checked').val();
-            console.log(color);
-
-            switch (color) {
-                case "red":
-                    rL = this.value;
-                    updateColors(color);
-                    break;
-                case "orange":
-                    oL = this.value;
-                    updateColors(color);
-                    break;
-                case "green":
-                    gL = this.value;
-                    updateColors(color);
-                    break;
-                case "blue":
-                    bL = this.value;
-                    updateColors(color);
-                    break;
-            }
-        });
-
-        let updateColors = function(color) {
-            console.log(color + " ran");
-            switch (color) {
-                case "red":
-                    $("#red").css({
-                        "background-color": "hsl(" + rH + "," + rS + "%," + rL + "%)"
-                    });
-                    break;
-                case "orange":
-                    $("#orange").css({
-                        "background-color": "hsl(" + oH + "," + oS + "%," + oL + "%)"
-                    });
-                    break;
-                case "green":
-                    $("#green").css({
-                        "background-color": "hsl(" + gH + "," + gS + "%," + gL + "%)"
-                    });
-                    break;
-                case "blue":
-                    $("#blue").css({
-                        "background-color": "hsl(" + bH + "," + bS + "%," + bL + "%)"
-                    });
-                    break;
-            }
-
-            //$("color-box").css({"background-color": "red"});
-            // $("." + color + " color-box").css({"background-color": "hsl(" + hue + ",100%, 50%)"});
-            console.log(rH + ',' + rS + ',' + rL);
-        }
-
-    </script>
+    <div id="blue" class="color-container">
+    
+    </div>
+    <div id="indigo" class="color-container">
+    
+    </div>
+    <div id="violet" class="color-container">
+    
+    </div>
+    
+    <footer>
+        <p>Made by <a href="http://lucaskern.github.io">Lucas Kern</a></p>
+    </footer>
 </body>
-
 </html>

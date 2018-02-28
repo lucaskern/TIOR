@@ -1,57 +1,90 @@
-const http = require('http'); // http module
-const url = require('url'); // url module
+const http = require('http');
+const url = require('url');
+const query = require('querystring');
+
 const htmlHandler = require('./htmlResponses.js');
 const jsonHandler = require('./jsonResponses.js');
 
 const port = process.env.PORT || process.env.NODE_PORT || 3000;
 
-// function to handle requests
-const onRequest = (request, response) => {
-    // parse url into individual parts
-    // returns an object of url parts by name
-    const parsedUrl = url.parse(request.url);
 
-    console.log(request.method);
+const handlePost = (request, response, parsedURL) => {
+  const res = response;
 
-    // check the request method (get, head, post, etc)
-    switch (request.method) {
-        case 'GET':
-            if (parsedUrl.pathname === '/') {
-                // if homepage, send index
-                htmlHandler.getIndex(request, response);
-            } else if (parsedUrl.pathname === '/style.css') {
-                // if stylesheet, send stylesheet
-                htmlHandler.getCSS(request, response);
-            } else if (parsedUrl.pathname === '/getUsers') {
-                // if get users, send user object back
-                jsonHandler.getUsers(request, response);
-            } else if (parsedUrl.pathname === '/updateUser') {
-                // if update user, change our user object
-                jsonHandler.updateUser(request, response);
-            } else {
-                // if not found, send 404 message
-                jsonHandler.notFound(request, response);
-            }
-            break;
-        case 'HEAD':
-            if (parsedUrl.pathname === '/getUsers') {
-                // if get users, send meta data back
-                jsonHandler.getUsersMeta(request, response);
-            } else {
-                // if not found send 404 without body
-                jsonHandler.notFoundMeta(request, response);
-            }
-            break;
-        case 'POST':
-            jsonHandler.updateUser(request, response);
-            break;
-        default:
-            // send 404 in any other case
-            jsonHandler.notFound(request, response);
+  const body = [];
+
+  // stream error handle
+  request.on('error', (err) => {
+    console.dir(err);
+    jsonHandler.clientError(request, response);
+  });
+
+  // grab data
+  request.on('data', (chunk) => {
+    body.push(chunk);
+  });
+
+  // end upload stream
+  request.on('end', () => {
+    const bodyString = Buffer.concat(body).toString();
+    const bodyParams = query.parse(bodyString);
+
+    if (parsedURL.pathname === '/addUser') {
+      // pass to the add user function
+      jsonHandler.handleUser(request, res, bodyParams);
+    } else if (parsedURL.pathname === '/addImg') {
+      // pass to the add user function
+      jsonHandler.handleImg(request, res, bodyParams);
     }
+  });
 };
 
-// start server
+const onRequest = (request, response) => {
+  console.log(request.url);
+  console.log(request.method);
+
+  const parsedURL = url.parse(request.url);
+
+  // check request method
+  switch (request.method) {
+    case 'GET':
+      if (parsedURL.pathname === '/') {
+        // homepage, send index
+        htmlHandler.getIndex(request, response);
+      } else if (parsedURL.pathname === '/style.css') {
+        htmlHandler.getStyle(request, response);
+      } else if (parsedURL.pathname === '/getUsers') {
+        jsonHandler.getUsers(request, response);
+      } else if (parsedURL.pathname === '/getImgs') {
+        jsonHandler.getImgs(request, response);
+      } else {
+        // if not found, 404
+        jsonHandler.notFound(request, response);
+      }
+      break;
+    case 'HEAD':
+      if (parsedURL.pathname === '/getUsers') {
+        jsonHandler.getUsersMeta(request, response);
+      } else {
+        jsonHandler.notFoundMeta(request, response);
+      }
+      break;
+    case 'POST':
+      if (parsedURL.pathname === '/addUser') {
+        handlePost(request, response, parsedURL);
+      } else if (parsedURL.pathname === '/addImg') {
+        handlePost(request, response, parsedURL);
+      } else {
+        jsonHandler.clientError(request, response);
+      }
+      break;
+    default:
+      // send 404 in any other case
+      jsonHandler.notFound(request, response);
+  }
+};
+
+
 http.createServer(onRequest).listen(port);
 
 console.log(`Listening on 127.0.0.1: ${port}`);
